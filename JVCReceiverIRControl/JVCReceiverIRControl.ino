@@ -8,11 +8,12 @@
  */
 #include <IRremote.h>
  
-//#define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
-//#define PanasonicPower        0x100BCBD  // Panasonic Power button
+#define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
+#define PanasonicPower        0x100BCBD  // Panasonic Power button
 
 #define JVCPower              0xC5E8
 
+int LED = 13;
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -21,8 +22,28 @@ IRsend irsend;
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(9600);
+    pinMode(LED, OUTPUT);
     inputString.reserve(200);
+    //digitalWrite(LED, HIGH);
+    Serial.println("fired power button");
+    irsend.sendPanasonic(PanasonicAddress,PanasonicPower); // This should turn your TV on and off
+  
+    irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat
+    delayMicroseconds(50); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+    irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, repeat
+    delay(500);
+//    digitalWrite(LED, LOW);
+//    delay(500); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+//    irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, repeat
+//    delay(500); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+//    irsend.sendJVC(0xC5E8, 16,1); // hex value, 16 bits, repeat
+//    delay(500); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+//    irsend.sendJVC(0xC5C0, 16,1); // hex value, 16 bits, repeat
+
+
+
+    
 }
 
 void loop() {
@@ -39,26 +60,47 @@ void loop() {
     }
     if (stringComplete) {
         if(inputString.indexOf("jvc_power_on") >= 0){
-          irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat        
+        irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat
+        delayMicroseconds(50); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+        irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, repeat
+          digitalWrite(LED, HIGH);
           Serial.println("turned on");
+          delay(500);
+          digitalWrite(LED, HIGH);
+          delay(500);
+          digitalWrite(LED, LOW);
+          delay(500);
+          digitalWrite(LED, HIGH);
+          delay(500);
+          digitalWrite(LED, LOW);
+          delay(500);
+          digitalWrite(LED, HIGH);
+          delay(500);
+          digitalWrite(LED, LOW);
+          delay(500);
         }
   
         if(inputString.indexOf("jvc_power_off") >= 0){
-          irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat        
+          irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, no repeat        
+          digitalWrite(LED, HIGH);
           Serial.println("turned off");
+          delay(500);
         }
+    
+    
+    digitalWrite(LED, LOW);
     inputString = "";
     stringComplete = false;
     }
   
   
-  //irsend.sendPanasonic(PanasonicAddress,PanasonicPower); // This should turn your TV on and off
+  irsend.sendPanasonic(PanasonicAddress,PanasonicPower); // This should turn your TV on and off
   
-  //irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat
-  //delayMicroseconds(50); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
-  //irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, repeat
+  irsend.sendJVC(JVCPower, 16,0); // hex value, 16 bits, no repeat
+  delayMicroseconds(50); // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
+  irsend.sendJVC(JVCPower, 16,1); // hex value, 16 bits, repeat
 
   
-  delayMicroseconds(50);
+  delay(500);
   
 }
