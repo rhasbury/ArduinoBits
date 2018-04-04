@@ -20,6 +20,8 @@ IRsend mySender;
 IRrecv MyReceiver(11);
 IRdecode MyDecoder;
 
+String inputString = "";         // a string to hold incoming data
+boolean stringComplete = false;  // whether the string is complete
 
 int TVUSB_state = 0;
 int JVCPower_state = 0;
@@ -30,51 +32,70 @@ void setup() {
   delay(2000); while (!Serial); //delay for Leonardo  
   pinMode(TVUSB, INPUT_PULLUP);
   pinMode(JVCPower, INPUT_PULLUP);
+  inputString.reserve(200);
   //pinMode(11, INPUT);
-  MyReceiver.enableIRIn();//start receiving
+  //MyReceiver.enableIRIn();//start receiving
 }
 
 void loop() {
-  /*
-  if (Serial.read() != -1) {
-    //send a code every time a character is received from the 
-    // serial port. You could modify this sketch to send when you
-    // push a button connected to an digital input pin.
-    //Substitute values and protocols in the following statement
-    // for device you have available.
-    mySender.send(JVC, 0xC5E8, 16);//Sony DVD power A8BCA, 20 bits    
-    Serial.println(F("Sent signal."));
-  }
-  */
-
   JVCPower_state = digitalRead(JVCPower);
   TVUSB_state = digitalRead(TVUSB);
 
-  if(digitalRead(TVUSB) == HIGH){
-    if(digitalRead(JVCPower) == LOW){
-      mySender.send(JVC, 0xC5E8, 16);  
+  if (stringComplete) {
+    //Serial.println(inputString);
+    // clear the string:
+
+    if(inputString.indexOf("isjvc") >= 0){
+      Serial.println("1");    
     }
-  }
+    if(inputString.indexOf("turn_on") >= 0){
+      if(digitalRead(JVCPower) == HIGH){
+        mySender.send(JVC, 0xC5E8, 16);  
+        Serial.println("turned_on");  
+      }
+      Serial.println("or_already_on");  
+    }
+    if(inputString.indexOf("turn_off") >= 0){
+      if(digitalRead(JVCPower) == LOW){
+        mySender.send(JVC, 0xC5E8, 16);  
+        Serial.println("turned_off");  
+      }
+      Serial.println("or already off");  
+    }
   
-  if(digitalRead(TVUSB) == LOW){
-    if(digitalRead(JVCPower) == HIGH){
-      mySender.send(JVC, 0xC5E8, 16);  
-    }
+   //Serial.println(inputString);    
+    inputString = "";
+    stringComplete = false;
   }
+  Serial.println(F("Looping."));
   Serial.print("Power: ");
   Serial.print(JVCPower_state);
-  Serial.print("  TVUSB: ");
+  Serial.print(" B TVUSB: ");
   Serial.print(TVUSB_state);
   Serial.println("  ");
 
-  if (MyReceiver.getResults()) {//wait till it returns true
-    MyDecoder.decode();
-    MyDecoder.dumpResults();
-    MyReceiver.enableIRIn(); //restart the receiver
-    }
 
-  Serial.println(F("Looping."));
   
-  delay(5000);
+  delay(500);
 }
 
+
+/*
+  SerialEvent occurs whenever a new data comes in the
+ hardware serial RX.  This routine is run between each
+ time loop() runs, so using delay inside loop can delay
+ response.  Multiple bytes of data may be available.
+ */
+void serialEvent() {
+  while (Serial.available()) {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+    // add it to the inputString:
+    inputString += inChar;
+    // if the incoming character is a newline, set a flag
+    // so the main loop can do something about it:
+    if (inChar == '\n' or inChar == ';') {
+      stringComplete = true;
+    }
+  }
+}
