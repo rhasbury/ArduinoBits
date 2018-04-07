@@ -67,12 +67,12 @@ void loop() {
     inputString = "";
     stringComplete = false;
   }
-  Serial.println(F("Looping."));
-  Serial.print("Power: ");
-  Serial.print(JVCPower_state);
-  Serial.print(" B TVUSB: ");
-  Serial.print(TVUSB_state);
-  Serial.println("  ");
+  //Serial.println(F("Looping."));
+  //Serial.print("Power: ");
+  //Serial.print(JVCPower_state);
+  //Serial.print(" B TVUSB: ");
+  //Serial.print(TVUSB_state);
+  //Serial.println("  ");
 
 
   
