@@ -62,7 +62,7 @@ if __name__ == "__main__":
             if(int(result) >= 0):
                 serialPort = port
                 print("Found JVCIR interface on serial port {}".format(serialPort))
-                ser.write(b'turn_on\n')       
+                ser.write(b'turn_off\n')       
                 time.sleep(0.1)
                 print(ser.readline())
                 print(ser.readline())
