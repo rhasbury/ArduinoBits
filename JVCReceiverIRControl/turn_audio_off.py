@@ -1,6 +1,6 @@
 import os
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', filename='/storage/jvccontrol/jvcdevice.log', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', filename='./jvcdevice.log', level=logging.DEBUG)
 import datetime
 import time
 from time import mktime
@@ -52,20 +52,16 @@ if __name__ == "__main__":
     for port in availableports:
         try:
             ser = serial.Serial(port, baud, bytesize=8, parity='N', stopbits=1, timeout=1, rtscts=False, dsrdtr=False)
-            time.sleep(2.9)
+            time.sleep(4)
             ser.flushInput()               
             ser.write(b'isjvc\n')       
-            time.sleep(0.2)
+            time.sleep(1.5)
             result = ser.readline()
             
             print("Testing port {}".format(port))
             if(int(result) >= 0):
                 serialPort = port
                 print("Found JVCIR interface on serial port {}".format(serialPort))
-                ser.write(b'turn_off\n')       
-                time.sleep(0.1)
-                print(ser.readline())
-                print(ser.readline())
                 ser.close()
                 break
             
@@ -74,4 +70,17 @@ if __name__ == "__main__":
             ser.close()
             pass
         except:
-            raise 
+            raise
+    if(serialPort == None):
+        logging.error("JVC IR interface device not found")
+        exit()
+    ser = serial.Serial(serialPort, baud, bytesize=8, parity='N', stopbits=1, timeout=1, rtscts=False, dsrdtr=False)
+    #ser.setRTS(0) 
+    time.sleep(3) # creating connection will reset arduino, need to wait for reset complete. 	
+    ser.write(b'turn_off')       
+    time.sleep(2.1)
+    print(ser.readline())
+    print(ser.readline())
+    print(ser.readline())
+    ser.close
+  
