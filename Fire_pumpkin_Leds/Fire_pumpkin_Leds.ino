@@ -1,12 +1,14 @@
 #include <FastLED.h>
+ 
+#include <math.h>
 
 #define LED_PIN     0
 #define COLOR_ORDER GRB
 #define CHIPSET     NEOPIXEL
 #define NUM_LEDS    24
 
-#define BRIGHTNESS  200
-#define FRAMES_PER_SECOND 30
+#define BRIGHTNESS  90
+#define FRAMES_PER_SECOND 50
 
 bool gReverseDirection = false;
 
@@ -44,18 +46,18 @@ CRGBPalette16 gPal;
 void setup() {
   delay(3000); // sanity delay
   //FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-  FastLED.addLeds<NEOPIXEL, 0>(leds, 24);
-  FastLED.addLeds<NEOPIXEL, 1>(leds, 16);
+  FastLED.addLeds<NEOPIXEL, 1>(leds, 24);
+  FastLED.addLeds<NEOPIXEL, 2>(leds, 16);
   FastLED.setBrightness( BRIGHTNESS );
   
 
   // This first palette is the basic 'black body radiation' colors,
   // which run from black to red to bright yellow to white.
-  gPal = HeatColors_p;
+  //  gPal = HeatColors_p;
   
   // These are other ways to set up the color palette for the 'fire'.
   // First, a gradient from black to red to yellow to white -- similar to HeatColors_p
-  //   gPal = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::Yellow, CRGB::White);
+     gPal = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::Yellow, CRGB::White);
   
   // Second, this palette is like the heat colors, but blue/aqua instead of red/yellow
   //   gPal = CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White);
@@ -68,7 +70,7 @@ void setup() {
 void loop()
 {
   // Add entropy to random number generator; we use a lot of it.
-  random16_add_entropy( random());
+  random16_add_entropy( random(32000));
 
   // Fourth, the most sophisticated: this one sets up a new palette every
   // time through the loop, based on a hue that changes every time.
@@ -164,4 +166,3 @@ void Fire2012WithPalette()
       leds[pixelnumber] = color;
     }
 }
-
