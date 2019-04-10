@@ -6,18 +6,24 @@
 
 #include <EEPROM.h>
 char sID[7] = "NC0002";
+const char* ssid = "";
+const char* wifi_password = "";
 
 
 void setup()
 {
  Serial.begin(9600);
- EEPROM.begin(6);
+ EEPROM.begin();
  for (int i=0; i<6; i++) {
    
    EEPROM.write(i,sID[i]);
    
  }
- EEPROM.commit();
+
+ EEPROM.put(100,ssid);
+ EEPROM.put(200,wifi_password);
+ 
+ //EEPROM.commit();
 }
 
 void loop() {
