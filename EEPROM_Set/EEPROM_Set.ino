@@ -5,15 +5,20 @@
 // first 6 bytes of the EEPROM
 
 #include <EEPROM.h>
-char sID[7] = "NC0002";
-const char* ssid = "";
-const char* wifi_password = "";
+  struct { 
+    char sID[7] = "NC0002";
+    char ssid[50] = "";
+    char wifi_password[50] = "";
+  } data;
 
+int addr = 0;
 
 void setup()
 {
  Serial.begin(9600);
  EEPROM.begin();
+ EEPROM.put(addr,data);
+ /*
  for (int i=0; i<6; i++) {
    
    EEPROM.write(i,sID[i]);
@@ -22,11 +27,12 @@ void setup()
 
  EEPROM.put(100,ssid);
  EEPROM.put(200,wifi_password);
+ */
  
  //EEPROM.commit();
 }
 
 void loop() {
- Serial.println(sID);
+ Serial.println(data.sID);
  delay(1000);
 }
