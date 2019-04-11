@@ -6,7 +6,7 @@
 
 #include <EEPROM.h>
   struct { 
-    char sID[7] = "NC0002";
+    char sID[7] = "NC0001";
     char ssid[50] = "";
     char wifi_password[50] = "";
   } data;
@@ -16,7 +16,7 @@ int addr = 0;
 void setup()
 {
  Serial.begin(9600);
- EEPROM.begin();
+ EEPROM.begin(512);
  EEPROM.put(addr,data);
  /*
  for (int i=0; i<6; i++) {
