@@ -29,7 +29,7 @@ void setup()
  EEPROM.put(200,wifi_password);
  */
  
- //EEPROM.commit();
+ EEPROM.commit();
 }
 
 void loop() {
