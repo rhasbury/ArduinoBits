@@ -45,12 +45,12 @@ RSSI | [ ]A1    -| O |-               4[ ] |   LCD               |
 */
 
 #include <Wire.h>
-#include <LiquidCrystal.h>
+//#include <LiquidCrystal.h>
 #include <SPI.h>
 
 // LiquidCrystal lcd(8, 9, 4, 5, 6, 7);         //DFR LCD-keyb Shield
 
-const int slaveSelectPin = 3;  //SPI-SS bzw. enable ADF4350
+//const int slaveSelectPin = 5;  //SPI-SS bzw. enable ADF4350
 
 long Freq = 44220000;  //Startfrequenz generel 100Hz aulösung
 long refin = 2500000; // Refrenquarz = 25Mhz
@@ -78,12 +78,15 @@ void setup() {
 //  lcd.print(" ADF4350  OE6OCG");
 
   Serial.begin(115200);// USB to PC for Debug only
-  pinMode (slaveSelectPin, OUTPUT);
-  digitalWrite(slaveSelectPin, LOW);
+  //pinMode (slaveSelectPin, OUTPUT);
+  //digitalWrite(slaveSelectPin, LOW);
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV128);
-  SPI.begin();
+  //SPI.begin();
+  //SPI.begin(CLK, MISO, MOSI, SS)
+  //SPI.begin(6, 8, 7, 11); //something about using gpio 6 and 7 makes the esp32 fault out. 
+  SPI.begin(36, 8, 25, 11);
   delay(500);
 
   Step[0] = 625; // 6,25 khz, 5khz geht nicht im Int-N Mode(MOD > 4095) bei 25Mhz Ref.
@@ -121,9 +124,27 @@ void setup() {
 }
 
 void loop() {
-
+  Freq = 44220000;  //
   SetFreq(Freq);
-  delay(200);
+  Serial.println(Freq);
+  delay(2000);
+
+  for(int i = 0; i< 100;i++){
+      Freq += ChanStep;  
+      SetFreq(Freq);
+      Serial.println(Freq);
+      int a1 = analogRead(14); // vref
+      int a2 = analogRead(12); // mag
+      int a3 = analogRead(13); // phase
+      Serial.println(a1);
+      Serial.println(a2);
+      Serial.println(a3);
+      delay(2000);
+      
+    
+  }
+
+
   
   /*lcd_key = read_LCD_buttons();
   switch (lcd_key)
@@ -256,18 +277,18 @@ void WriteADF2(int idx)
 }
 int WriteADF(byte a1, byte a2, byte a3, byte a4) {
   // write over SPI to ADF4350
-  digitalWrite(slaveSelectPin, LOW);
+//  digitalWrite(slaveSelectPin, LOW);
   delayMicroseconds(10);
   SPI.transfer(a1);
   SPI.transfer(a2);
   SPI.transfer(a3);
   SPI.transfer(a4);
-  Toggle();
+  //Toggle();
 }
 int Toggle() {
-  digitalWrite(slaveSelectPin, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(slaveSelectPin, LOW);
+//  digitalWrite(slaveSelectPin, HIGH);
+//  delayMicroseconds(5);
+//  digitalWrite(slaveSelectPin, LOW);
 }
 
 void ConvertFreq(long freq, unsigned long R[])
