@@ -10,7 +10,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <stdint.h>
+//#include <stdint.h>
 #include <BigNumber.h>
 
 

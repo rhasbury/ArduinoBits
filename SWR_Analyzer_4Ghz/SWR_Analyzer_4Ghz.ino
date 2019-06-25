@@ -7,7 +7,7 @@
 
 #include <SPI.h>
 #include <Wire.h>
-#include <stdint.h>
+//#include <stdint.h>
 #include <Arduino.h>
 #include "adf4351.h"
 #if (OLEDINSTALLED == true)
