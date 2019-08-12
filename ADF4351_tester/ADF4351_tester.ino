@@ -50,7 +50,8 @@ RSSI | [ ]A1    -| O |-               4[ ] |   LCD               |
 
 // LiquidCrystal lcd(8, 9, 4, 5, 6, 7);         //DFR LCD-keyb Shield
 
-//const int slaveSelectPin = 5;  //SPI-SS bzw. enable ADF4350
+const int LEPin = 11;  //LE pin. Enables loaded data when pulled high  ADF4350
+const int CEPin = 8;  //LE pin. Enables loaded data when pulled high  ADF4350
 
 long Freq = 44220000;  //Startfrequenz generel 100Hz aulösung
 long refin = 2500000; // Refrenquarz = 25Mhz
@@ -78,8 +79,10 @@ void setup() {
 //  lcd.print(" ADF4350  OE6OCG");
 
   Serial.begin(115200);// USB to PC for Debug only
-  //pinMode (slaveSelectPin, OUTPUT);
-  //digitalWrite(slaveSelectPin, LOW);
+  pinMode (LEPin, OUTPUT);
+  digitalWrite(LEPin, LOW);
+  pinMode (CEPin, OUTPUT);
+  digitalWrite(CEPin, HIGH);
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV128);
@@ -146,113 +149,11 @@ void loop() {
 
 
   
-  /*lcd_key = read_LCD_buttons();
-  switch (lcd_key)
-  {
-    case btnRIGHT:
-      { //Scannen +-10Mhz mit eingestellten Kanalraster
-        long FreqHi;
-        Freq = channel[CHnum];
-        if (ChanStep == 100000)
-        {
-          FreqHi = Freq + 10000000; // +100Mhz
-        }
-        else
-        { FreqHi = Freq + 500000; // +5Mhz};
-        };
-        while (Freq < FreqHi) {
-          Freq += ChanStep;
-          SetFreq(Freq);
-        }
-
-        if (ChanStep == 100000)
-        {
-          FreqHi = FreqHi - 10000000; // -100Mhz
-        }
-        else
-        { FreqHi = FreqHi - 500000; // -5Mhz};
-        };
-
-        while (FreqHi < Freq) {
-          Freq -= ChanStep;
-          SetFreq(Freq);
-        }
-        break;
-      }
-    case btnLEFT:
-      {
-        StepNum += 1;
-        if (StepNum > 4) StepNum = 0;
-        ChanStep = Step[StepNum];
-        lcd.setCursor(2, 0);
-        lcd.print("       ");
-        lcd.setCursor(2, 0);
-        lcd.print(ChanStep);
-        lcd.print("0");
-        // render Frequenz nach Raster
-        SetFreq(Freq);
-        delay(200);
-        break;
-      }
-    case btnUP:
-      {
-        Freq += ChanStep;
-        SetFreq(Freq);
-        break;
-      }
-    case btnDOWN:
-      {
-        Freq -= ChanStep;
-        SetFreq(Freq);
-        break;
-      }
-    case btnSELECT:
-      {
-        //lcd.print("SELECT");
-        CHnum += 1;
-        if (CHnum > 12) CHnum = 0;
-        Freq = channel[CHnum];
-        SetFreq(Freq);
-        delay(200);
-        break;
-      }
-    case btnNONE:
-      {
-        //lcd.print("NONE  ");
-        break;
-      }
-
-    }
-  adc_key_in = analogRead(0); // verhindert scannen wenn taste zulange gedrückt wird
-  delay(20);
-  //Serial.print ("ADC=");    Serial.print (adc_key_in);    Serial.print ("\r\n");
-  while (adc_key_in < 900) {
-    adc_key_in = analogRead(0); 
-    delay(20);
-  } */
-
-  
 }
 
-int read_LCD_buttons()
-{
-  adc_key_in = analogRead(0);
-  if (adc_key_in > 1000) return btnNONE;
-  if (adc_key_in < 50)   return btnRIGHT;
-  if (adc_key_in < 195)  return btnUP;
-  if (adc_key_in < 380)  return btnDOWN;
-  if (adc_key_in < 555)  return btnLEFT;
-  if (adc_key_in < 790)  return btnSELECT;
-  return btnNONE;
-}
 
 void SetFreq(long Freq)
 {
-  //  lcd.setCursor(0, 1);           // Cursor auf 2.Zeile
-  //  lcd.print(Freq);
-  //  lcd.print(" Mhz  ");
-
-  //showFreq(Freq);
 
   ConvertFreq(Freq, Reg);
   WriteADF2(5);
@@ -268,6 +169,7 @@ void SetFreq(long Freq)
   WriteADF2(0);
   delayMicroseconds(2500);
 }
+
 void WriteADF2(int idx)
 { // make 4 byte from integer for SPI-Transfer
   byte buf[4];
@@ -283,13 +185,15 @@ int WriteADF(byte a1, byte a2, byte a3, byte a4) {
   SPI.transfer(a2);
   SPI.transfer(a3);
   SPI.transfer(a4);
-  //Toggle();
+
 }
+
 int Toggle() {
-//  digitalWrite(slaveSelectPin, HIGH);
-//  delayMicroseconds(5);
-//  digitalWrite(slaveSelectPin, LOW);
+  digitalWrite(LEPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(LEPin, LOW);
 }
+
 
 void ConvertFreq(long freq, unsigned long R[])
 {
@@ -418,39 +322,7 @@ void ConvertFreq(long freq, unsigned long R[])
   R[5] = (unsigned long)(5 + 0 * pow(2, 3) + 3 * pow(2, 19) + 0 * pow(2, 21) + D_LdPinMod * pow(2, 22));
 }
 //to do instead of writing 0x08000000 you can use other two possibilities: (1ul << 27) or (uint32_t) (1 << 27).
-/*
-void showFreq(long FREQ) {
-  millions = int(FREQ / 100000000);
-  hundredthousands = ((FREQ / 10000000) % 10);
-  tenthousands = ((FREQ / 1000000) % 10);
-  thousands = ((FREQ / 100000) % 10);
-  hundreds = ((FREQ / 10000) % 10);
-  tens = ((FREQ / 1000) % 10);
-  ones = ((FREQ / 100) % 10);
-  hundredHz = ((FREQ / 10) % 10);
-  tenHz = ((FREQ) % 10);
-  lcd.setCursor(0, 1);
-  lcd.print("            ");
-  if (millions > 0) {
-    lcd.setCursor(0, 1);
-    lcd.print(millions);
-    lcd.print(".");
-  }
-  else {
-    lcd.setCursor(2, 1);
-  }
-  lcd.print(hundredthousands);
-  lcd.print(tenthousands);
-  lcd.print(thousands);
-  lcd.print(",");
-  lcd.print(hundreds);
-  lcd.print(tens);
-  lcd.print(ones);
-  lcd.print(".");
-  lcd.print(hundredHz);
-  lcd.print(tenHz);
-};
-*/
+
 // as PLL-Register Referenz
 // R[0] = (0x002E0020); // 145.0 Mhz, 12.5khz raster
 // R[1] = (0x08008029);

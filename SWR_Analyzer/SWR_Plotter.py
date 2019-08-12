@@ -1,30 +1,15 @@
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
 import serial
+import numpy as np
+import json
+import glob
+import time
+import traceback
+import sys
+import pandas as pd
+from matplotlib.widgets import Button
 
 serialPort = None
-
-style.use('fivethirtyeight')
-
-
-fig = plt.figure()
-ax1 = fig.add_subplot(1,1,1)
-
-def animate(i):
-    ser = serial.Serial(serialPort, 115200, bytesize=8, parity='N', stopbits=1, timeout=1, rtscts=False, dsrdtr=False)
-    
-    #graph_data = open('example.txt','r').read()
-    #lines = graph_data.split('\n')
-    xs = []
-    ys = []
-##    for line in lines:
-##        if len(line) > 1:
-##            x, y = line.split(',')
-##            xs.append(float(x))
-##            ys.append(float(y))
-    ax1.clear()
-    ax1.plot(xs, ys)
 
 
 def serial_ports():
@@ -64,32 +49,56 @@ if __name__ == "__main__":
 
     for port in availableports:
         try:
-            ser = serial.Serial(port, 115200, bytesize=8, parity='N', stopbits=1, timeout=1, rtscts=False, dsrdtr=False)
-            time.sleep(2) # for Arduino Nano this needs to be 2 seconds, for Arduino micro it can be almost zero. (nano resets on serial connection) 
+            ser = serial.Serial(port, 115200, bytesize=8, parity='N', stopbits=1, timeout=1, rtscts=True, dsrdtr=True)
+            time.sleep(0.1) # for Arduino Nano this needs to be 2 seconds, for Arduino micro it can be almost zero. (nano resets on serial connection) 
             ser.flushInput()               
-            ser.write(b'whatis;')       
-            time.sleep(2)
+            ser.write(b'whatis\n')       
+            time.sleep(0.2)
             result = ser.readline()
             print("Testing port {}".format(port))            
-            if(result.find(b'swr') >= 0):
+            if(result.find(b'swrmeter4g') >= 0):
                 serialPort = port
                 print("Found swr analyzer on serial port {}".format(serialPort))
                 ser.close()
                 break
             
-            print("closind read result {}".format(result))
+            print("Closing. Read result {}".format(result))
             ser.close()
         except:
             raise
         
 
     if(serialPort == None):
-        print("No monitor found. Exiting")
+        print("No swrmeter found. Exiting")
         exit()
-
     
 
 
+	
+    ser = serial.Serial(serialPort, 115200, bytesize=8, parity='N', stopbits=1, timeout=400, rtscts=False, dsrdtr=False)
+    print("Fetching sweep")
+    ser.write(b'get_response,1000,5000000;')       
+    
+    time.sleep(0.2)
+    data = ser.readline()
+    ser.close()
+
+    try:
+      j = json.loads(data)            
+      print(j['sID'])
+      df = pd.DataFrame(j['sweep'])
+      print(df)
+      df.set_index('frequency', inplace=True)
+      df.plot()
+      plt.show()
+    
+    
+    except:   
+      print(data)
+      print("broken data")    
+      print(traceback.format_exc())
+      
+        
             
-    ani = animation.FuncAnimation(fig, animate, interval=1000)
-    plt.show()
+    
+    
