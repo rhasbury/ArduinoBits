@@ -77,7 +77,7 @@ if __name__ == "__main__":
 	
     ser = serial.Serial(serialPort, 115200, bytesize=8, parity='N', stopbits=1, timeout=400, rtscts=False, dsrdtr=False)
     print("Fetching sweep")
-    ser.write(b'get_response,1000,5000000;')       
+    ser.write(b'get_response,1000,60000000;')       
     
     time.sleep(0.2)
     data = ser.readline()

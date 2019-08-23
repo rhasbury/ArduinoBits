@@ -59,7 +59,7 @@ void setup() {
   SPI.setClockDivider(SPI_CLOCK_DIV128);
   //SPI.begin(CLK, MISO, MOSI, SS)
   SPI.begin(0, 36, 4, 8);
-  delay(100);
+  //delay(100);
 
   Step[0] = 625; // 6,25 khz, 5khz geht nicht im Int-N Mode(MOD > 4095) bei 25Mhz Ref.
   Step[1] = 1000; // 10 khz
@@ -125,7 +125,8 @@ void loop() {
           //Freq += Step[4];  //add 1 mhz
           Freq += Step[4]; 
           SetFreq(Freq);
-          delay(50);
+          //delay(2);
+          //delayMicroseconds(100);
           //Serial.print(Freq);
           SweepArray[i].frequency = Freq;
           //Serial.print(", ");
@@ -152,7 +153,7 @@ void loop() {
     stringComplete = false;
     
   }
-delay(2);
+delayMicroseconds(2);
 }
 
 
@@ -187,20 +188,20 @@ void printSweep()  // Barfs out the sweep results as a json structure.
 
 void SetFreq(long Freq)
 {
-
+  //int writeDelay = 2500;  // This was initially 2500. It's been removed entirely as the delays don't affect measurement times
   ConvertFreq(Freq, Reg);
   WriteADF2(5);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
   WriteADF2(4);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
   WriteADF2(3);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
   WriteADF2(2);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
   WriteADF2(1);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
   WriteADF2(0);
-  delayMicroseconds(2500);
+  //delayMicroseconds(writeDelay);
 }
 
 void WriteADF2(int idx)
@@ -212,13 +213,14 @@ void WriteADF2(int idx)
 }
 int WriteADF(byte a1, byte a2, byte a3, byte a4) {
   // write over SPI to ADF4350
-   digitalWrite(LEPin, LOW);
-  delayMicroseconds(100);
+  //int writeDelay = 100;  // was initially 100. Tried lowering to improve sweep times. Turns out the delays can be removed entirely. 
+  digitalWrite(LEPin, LOW);
+  //delayMicroseconds(writeDelay);
   SPI.transfer(a1);
   SPI.transfer(a2);
   SPI.transfer(a3);
   SPI.transfer(a4);
-  delayMicroseconds(100);
+  //delayMicroseconds(writeDelay);
   digitalWrite(LEPin, HIGH);
 
 }
