@@ -6,7 +6,7 @@
 
 
 #include <Wire.h>
-
+#include <ArduinoJson.h>
 #include <SPI.h>
 #include <HardwareSerial.h>
 
@@ -43,11 +43,11 @@ typedef struct freqsweep SweepArraytype;
 SweepArraytype SweepArray[1000];
 
 String tempstring;
-//byte tenHz, hundredHz, ones, tens, hundreds, thousands, tenthousands, hundredthousands, millions; 
+//byte tenHz, hundredHz, ones, tens, hundreds, thousands, tenthousands, hundredthousands, millions;
 
 
-void setup() {  
-  Serial.begin(115200);   
+void setup() {
+  Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, 25, 26);
   Serial2.println("ESP32test");
   pinMode (LEPin, OUTPUT);
@@ -91,7 +91,7 @@ void loop() {
   while (Serial2.available()) {
     // get the new byte:
     char inChar = (char)Serial2.read();
-    // add it to the inputString:    
+    // add it to the inputString:
     inputString += inChar;
     //Serial2.print(inputString);
     // if the incoming character is a newline, set a flag
@@ -104,78 +104,94 @@ void loop() {
 
 
 
-  
+
   //Freq = 80000000;
   Freq = 5000000;
   //SetFreq(Freq);
-    
+
   if (stringComplete) {
     if(inputString.indexOf("get_response") >= 0){
       //Serial2.println("Starting Sweep");
       //Serial.println("Starting Sweep");
-      char inputstring_array[inputString.length() + 1];
-      inputString.toCharArray(inputstring_array, inputString.length() + 1);      
-      tempstring = strtok(inputstring_array, ",");      
-      tempstring = strtok(NULL, ",");      
+      /*char inputstring_array[inputString.length() + 1];
+      inputString.toCharArray(inputstring_array, inputString.length() + 1);
+      tempstring = strtok(inputstring_array, ",");
+      tempstring = strtok(NULL, ",");
       sweeploops = tempstring.toInt();
-      tempstring = strtok(NULL, ","); 
-      Freq = tempstring.toInt();
-      digitalWrite(LEPin, LOW);
-      for(int i = 0; i< sweeploops ; i++) {
-          //Freq += Step[4];  //add 1 mhz
-          Freq += Step[4]; 
-          SetFreq(Freq);
-          //delay(2);
-          //delayMicroseconds(100);
-          //Serial.print(Freq);
-          SweepArray[i].frequency = Freq;
-          //Serial.print(", ");
-          int a1 = analogRead(15); // vref
-          SweepArray[i].vref = a1;
-          int a2 = analogRead(12); // mag
-          SweepArray[i].mag = a2;
-          int a3 = analogRead(13); // phase      
-          SweepArray[i].phase = a3;
-         
+      tempstring = strtok(NULL, ",");
+      Freq = tempstring.toInt();*/
+      StaticJsonDocument<200> jsonBuffer;
+      DeserializationError error = deserializeJson(jsonBuffer, inputString);
+      if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.c_str());
+        return;
       }
-      printSweep();
-      digitalWrite(LEPin, HIGH);
+      else
+      {
+        sweeploops = jsonBuffer["steps"];
+        int step_size = jsonBuffer["step_size"];
+        Freq = jsonBuffer["start_freq"];
+
+        digitalWrite(LEPin, LOW);
+        digitalWrite(CEPin, HIGH);
+        for(int i = 0; i< sweeploops ; i++) {
+            //Freq += Step[4];  //add 1 mhz
+            Freq += Step[step_size];
+            SetFreq(Freq);
+            //delay(2);
+            //delayMicroseconds(100);
+            //Serial.print(Freq);
+            SweepArray[i].frequency = Freq;
+            //Serial.print(", ");
+            int a1 = analogRead(15); // vref
+            SweepArray[i].vref = a1;
+            int a2 = analogRead(12); // mag
+            SweepArray[i].mag = a2;
+            int a3 = analogRead(13); // phase
+            SweepArray[i].phase = a3;
+
+        }
+        printSweep();
+        digitalWrite(LEPin, HIGH);
+        digitalWrite(CEPin, LOW);
+      }
     }
 
 
 
-    if(inputString.indexOf("whatis") >= 0){        
-      Serial2.println("swrmeter4g");      
-      
+    if(inputString.indexOf("whatis") >= 0){
+      Serial2.println("swrmeter4g");
+
     }
-          
+
     inputString = "";
     stringComplete = false;
-    
+
   }
 delayMicroseconds(2);
 }
 
 
 
-void printSweep()  // Barfs out the sweep results as a json structure. 
+void printSweep()  // Barfs out the sweep results as a json structure.
 {
-  
+
       Serial2.print("{\"sID\" : ");
       Serial2.print("\"005\"");
-      
+
       Serial2.print(", \"sweep\" : [ ");
       for(int i = 0; i< sweeploops;i++){
-        Serial2.print(" { \"frequency\" : ");  
-        Serial2.print(SweepArray[i].frequency);      
+        Serial2.print(" { \"frequency\" : ");
+        Serial2.print(SweepArray[i].frequency);
         Serial2.print(", ");
-        Serial2.print(" \"vref\" : ");  
+        Serial2.print(" \"vref\" : ");
         Serial2.print(SweepArray[i].vref);
         Serial2.print(", ");
-        Serial2.print(" \"mag\" : ");  
+        Serial2.print(" \"mag\" : ");
         Serial2.print(SweepArray[i].mag);
         Serial2.print(", ");
-        Serial2.print(" \"phase\" : ");  
+        Serial2.print(" \"phase\" : ");
         Serial2.print(SweepArray[i].phase);
         Serial2.print("}");
         if(i==sweeploops-1) { break; };
@@ -213,7 +229,7 @@ void WriteADF2(int idx)
 }
 int WriteADF(byte a1, byte a2, byte a3, byte a4) {
   // write over SPI to ADF4350
-  //int writeDelay = 100;  // was initially 100. Tried lowering to improve sweep times. Turns out the delays can be removed entirely. 
+  //int writeDelay = 100;  // was initially 100. Tried lowering to improve sweep times. Turns out the delays can be removed entirely.
   digitalWrite(LEPin, LOW);
   //delayMicroseconds(writeDelay);
   SPI.transfer(a1);
