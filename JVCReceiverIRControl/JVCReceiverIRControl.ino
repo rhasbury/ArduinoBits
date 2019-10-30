@@ -62,6 +62,15 @@ void loop() {
       }
       Serial.println("or already off");  
     }
+    if(inputString.indexOf("dvd_norm") >= 0){     
+        mySender.send(JVC, 0xC5C2, 16);  
+        Serial.println("sent dvd");         
+    }
+    if(inputString.indexOf("dvd_multi") >= 0){     
+        mySender.send(JVC, 0xC56B, 16);  
+        Serial.println("sent dvd");         
+    }
+
   
    //Serial.println(inputString);    
     inputString = "";
